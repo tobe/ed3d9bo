@@ -144,12 +144,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Draw.h" />
-    <ClInclude Include="ed3d9bo.h" />
+    <ClInclude Include="draw.h" />
+    <ClInclude Include="overlay.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Draw.cpp" />
-    <ClCompile Include="ed3d9bo.cpp" />
+    <ClCompile Include="draw.cpp" />
+    <ClCompile Include="overlay.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

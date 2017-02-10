@@ -1,7 +1,7 @@
-#include "ed3d9bo.h"
+#include "overlay.h"
 #include "Draw.h"
 
-ed3d9bo *test;
+ed3d9bo::Overlay *test;
 Draw *draw;
 void My_Render();
 
@@ -22,7 +22,7 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR  lpCmdL
     
     // Here's the class!
     try {
-        test = new ed3d9bo(hInstance, "Notepad", "Untitled - Notepad", "Testing", Proc);
+        test = new ed3d9bo::Overlay(hInstance, "Notepad", "Untitled - Notepad", "Testing", Proc);
         test->Window_Init();
         test->DX_Init();
         test->Loop(My_Render);

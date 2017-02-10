@@ -1,6 +1,7 @@
-#include "ed3d9bo.h"
+#include "overlay.h"
+using namespace ed3d9bo;
 
-ed3d9bo::ed3d9bo(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM)) {
+Overlay::Overlay(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM)) {
     // Instantiate these.
     this->m_hInstance           = hInstance;
     this->m_lpTargetClassName   = lpClassName;
@@ -9,7 +10,7 @@ ed3d9bo::ed3d9bo(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName,
     this->WndProc               = WndProc;
 }
 
-bool ed3d9bo::Window_Init() {
+bool Overlay::Window_Init() {
     // Initialize the window
     WNDCLASSEX wndOverlay;
     ZeroMemory(&wndOverlay, sizeof(wndOverlay));
@@ -67,7 +68,7 @@ bool ed3d9bo::Window_Init() {
 }
 
 // Overload this for ImGui
-bool ed3d9bo::DX_Init() {
+bool Overlay::DX_Init() {
     auto hCreateMe = Direct3DCreate9Ex(D3D_SDK_VERSION, &this->m_pD3D9);
     if(!SUCCEEDED(hCreateMe)) { // Uh...
         UnregisterClass(this->m_lpszOwnWindowName, this->m_hInstance);
@@ -100,7 +101,7 @@ bool ed3d9bo::DX_Init() {
                    DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &this->m_pFont);
 }
 
-void ed3d9bo::Loop(std::function<void(void)> Render) {
+void Overlay::Loop(std::function<void(void)> Render) {
     while(1) {
         if(PeekMessage(&this->Message, this->m_hwOwn, 0, 0, PM_REMOVE)) {
             TranslateMessage(&this->Message);
@@ -122,7 +123,7 @@ void ed3d9bo::Loop(std::function<void(void)> Render) {
     }
 }
 
-bool ed3d9bo::FixPositioning() {
+bool Overlay::FixPositioning() {
     // Get the target window
     this->m_hwTarget = FindWindow(this->m_lpTargetClassName, this->m_lpTargetWindowName);
     if(!this->m_hwTarget) // No longer exists (in theory)
@@ -141,7 +142,7 @@ bool ed3d9bo::FixPositioning() {
     return true;
 }
 
-bool ed3d9bo::SetOverlayDimensions(int iWidth, int iHeight) {
+bool Overlay::SetOverlayDimensions(int iWidth, int iHeight) {
     RECT rectDesktop;
     const HWND hDesktop = GetDesktopWindow();
     if(!hDesktop)
@@ -160,7 +161,7 @@ bool ed3d9bo::SetOverlayDimensions(int iWidth, int iHeight) {
     return true;
 }
 
-bool ed3d9bo::Pre_Render() {
+bool Overlay::Pre_Render() {
     // Clear old stuff
     m_pDevice->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
     m_pDevice->BeginScene();
@@ -172,7 +173,7 @@ bool ed3d9bo::Pre_Render() {
     return false; // Othewise, there's no point in rendering if the application isn't even focused.
 }
 
-bool ed3d9bo::Post_Render() {
+bool Overlay::Post_Render() {
     /*this->m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE); // Turn off Z-buffering
     this->m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE); // Turn off 3D-lightning
     this->m_pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);*/
@@ -195,4 +196,4 @@ bool ed3d9bo::Post_Render() {
     return true;
 }
 
-ed3d9bo::~ed3d9bo() {}
+Overlay::~Overlay() {}
