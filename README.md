@@ -1,5 +1,5 @@
 ## ed3d9bo
-external D3D9 base overlay
+**E**xternal **D3D9** **b**ase **o**verlay
 
 ## Requirements
 * Visual Studio >= 2015
@@ -9,4 +9,4 @@ external D3D9 base overlay
 
 ## Setup
 If you have installed DirectX in its usual location, then `$(DXSDK_DIR)` should have been created.  
-If not, you need to manually adjust the variable to point to your installation, or, alternatively, manually configure the library and include paths in project settings.
+If not, you need to manually adjust the environment variable to point to your installation, or, alternatively, manually configure the library and include paths in project settings.
