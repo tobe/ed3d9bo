@@ -8,5 +8,5 @@ external D3D9 base overlay
 * A windowed target (must not be fullscreen!)
 
 ## Setup
-If you have installed DirectX in its usual location, then $(DXSDK_DIR) should have been created.  
+If you have installed DirectX in its usual location, then `$(DXSDK_DIR)` should have been created.  
 If not, you need to manually adjust the variable to point to your installation, or, alternatively, manually configure the library and include paths in project settings.

@@ -1,11 +1,15 @@
 #include "ed3d9bo.h"
 
-ed3d9bo::ed3d9bo(LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName) {
-    // Set these
-    this->m_lpTargetClassName  = lpClassName;
-    this->m_lpTargetWindowName = lpWindowName;
-    this->m_lpszOwnWindowName  = lpszOwnWindowName;
+ed3d9bo::ed3d9bo(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM)) {
+    // Instantiate these.
+    this->m_hInstance           = hInstance;
+    this->m_lpTargetClassName   = lpClassName;
+    this->m_lpTargetWindowName  = lpWindowName;
+    this->m_lpszOwnWindowName   = lpszOwnWindowName;
+    this->WndProc               = WndProc;
+}
 
+bool ed3d9bo::Window_Init() {
     // Initialize the window
     WNDCLASSEX wndOverlay;
     ZeroMemory(&wndOverlay, sizeof(wndOverlay));
@@ -19,15 +23,14 @@ ed3d9bo::ed3d9bo(LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindo
     wndOverlay.hIcon            = LoadIcon(0, IDI_APPLICATION);
     wndOverlay.hIconSm          = LoadIcon(0, IDI_APPLICATION);
     wndOverlay.hbrBackground    = (HBRUSH)CreateSolidBrush(RGB(0, 0, 0)); // Try 255,255,255 here?
-    wndOverlay.lpszClassName    = lpszOwnWindowName;
-    wndOverlay.lpszMenuName     = lpszOwnWindowName;
-    wndOverlay.hIconSm          = LoadIcon(wndOverlay.hInstance, IDI_APPLICATION);
+    wndOverlay.lpszClassName    = this->m_lpszOwnWindowName;
+    wndOverlay.lpszMenuName     = this->m_lpszOwnWindowName;
 
     if(!RegisterClassEx(&wndOverlay))
         throw std::runtime_error("Failed to register the overlay.");
 
     // Find the target window handle.
-    this->m_hwTarget = FindWindow(lpClassName, lpWindowName);
+    this->m_hwTarget = FindWindow(m_lpTargetClassName, m_lpTargetWindowName);
     if(!this->m_hwTarget)
         throw std::runtime_error("Failed to find the target window.");
 
@@ -43,7 +46,7 @@ ed3d9bo::ed3d9bo(LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindo
 
     // Create the window
     // TODO: fix this
-    this->m_hwOwn = CreateWindowEx(WS_EX_LAYERED | WS_EX_NOACTIVATE, lpszOwnWindowName, lpszOwnWindowName, 
+    this->m_hwOwn = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_NOACTIVATE, this->m_lpszOwnWindowName, this->m_lpszOwnWindowName,
                                    WS_POPUP, 100, 100, this->m_iWidth, this->m_iHeight, 0, 0, this->m_hInstance, 0);
     if(!this->m_hwOwn)
         throw std::runtime_error("Failed to CreateWindowEx.");
@@ -60,6 +63,7 @@ ed3d9bo::ed3d9bo(LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindo
     DwmExtendFrameIntoClientArea(this->m_hwOwn, &this->m_Margins);
 
     // Success.
+    return 0;
 }
 
 // Overload this for ImGui
@@ -86,15 +90,49 @@ bool ed3d9bo::DX_Init() {
     if(!SUCCEEDED(this->m_pD3D9->CreateDeviceEx(
         D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, this->m_hwOwn, D3DCREATE_HARDWARE_VERTEXPROCESSING,
         &this->m_D3D9_P, NULL, &this->m_pDevice))) {
-        
-        this->m_pD3D9->Release();
-        UnregisterClass(this->m_lpszOwnWindowName, this->m_hInstance);
-        return false;
+            this->m_pD3D9->Release();
+            UnregisterClass(this->m_lpszOwnWindowName, this->m_hInstance);
+            return false;
     }
 
     // Spawn a font.
-    D3DXCreateFont(this->m_pDevice, 48, 0, FW_BOLD, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                   DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial", &this->m_Font);
+    D3DXCreateFont(this->m_pDevice, 16, 0, FW_NORMAL, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                   DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &this->m_Font);
+}
+
+void ed3d9bo::Loop(std::function<void(void)> Render) {
+    
+    while(1) {
+        if(PeekMessage(&this->Message, this->m_hwOwn, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&this->Message);
+            DispatchMessage(&this->Message);
+        }
+
+        // Fix Positioning (keep up!)
+        if(!this->FixPositioning())
+            exit(0);
+
+        // Render time!
+        if(this->Pre_Render()) {
+            Render();
+        }
+        this->Post_Render();
+
+        // Sleep
+        Sleep(this->m_dwSleep);
+    }
+}
+
+bool ed3d9bo::FixPositioning() {
+    this->m_hwTarget = FindWindow(this->m_lpTargetClassName, this->m_lpTargetWindowName);
+    if(!this->m_hwTarget) // No longer exists (in theory)
+        return false;
+
+    // TODO: add this
+    GetWindowRect(this->m_hwTarget, &this->m_RectTarget);
+    MoveWindow(this->m_hwOwn, this->m_RectTarget.left, this->m_RectTarget.top, this->m_RectTarget.right - this->m_RectTarget.left, this->m_RectTarget.bottom - this->m_RectTarget.top, true);
+
+    return true;
 }
 
 bool ed3d9bo::SetOverlayDimensions(int iWidth, int iHeight) {
@@ -114,6 +152,53 @@ bool ed3d9bo::SetOverlayDimensions(int iWidth, int iHeight) {
     this->m_iHeight = iHeight;
 
     return true;
+}
+
+bool ed3d9bo::Pre_Render() {
+    // Clear old stuff
+    m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 1.0f, 0);
+    m_pDevice->BeginScene();
+
+    // Is the target focused (in foreground?). If so, return true as in, continue rendering.
+    if(this->m_hwTarget == GetForegroundWindow())
+        return true;
+
+    return false; // Othewise, there's no point in rendering if the application isn't even focused.
+}
+
+bool ed3d9bo::Post_Render() {
+    /*this->m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE); // Turn off Z-buffering
+    this->m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE); // Turn off 3D-lightning
+    this->m_pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);*/
+
+    dwFrames++;
+    dwCurrentTime = GetTickCount(); // Even better to use timeGetTime()
+    dwElapsedTime = dwCurrentTime - dwLastUpdateTime;
+
+    if(dwElapsedTime >= 1000) {
+        wsprintf(szFPS, "FPS = %u", (UINT)(dwFrames * 1000.0 / dwElapsedTime));
+        dwFrames = 0;
+        dwLastUpdateTime = dwCurrentTime;
+    }
+
+    this->DrawTextA(szFPS, 30, 100, 0, 255, 0);
+
+    this->m_pDevice->EndScene();
+    this->m_pDevice->PresentEx(0, 0, 0, 0, 0);
+
+    return true;
+}
+
+int ed3d9bo:: DrawText(char* String, int x, int y, int r, int g, int b) {
+    RECT Font;
+    Font.bottom = 0;
+    Font.left = x;
+    Font.top = y;
+    Font.right = 0;
+
+    this->m_Font->DrawTextA(0, String, strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+
+    return 0;
 }
 
 ed3d9bo::~ed3d9bo() {}
