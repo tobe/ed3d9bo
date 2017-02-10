@@ -21,9 +21,10 @@ public:
     void Loop(std::function<void(void)>); // Loops!
     int DrawText(char* String, int x, int y, int r, int g, int b);
 
-    IDirect3DDevice9Ex    *m_pDevice;
+    IDirect3DDevice9Ex    *m_pDevice; // TODO: move down, make getter
     LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM) = nullptr;
 
+    // TODO: Move these in a thing yeah ok
     DWORD dwFrames = 0;
     DWORD dwCurrentTime = 0;
     DWORD dwLastUpdateTime = 0;
@@ -34,9 +35,9 @@ protected:
     // WndProc callback
     //std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>WndProc = nullptr;
 
-    IDirect3D9Ex          *m_pD3D9;
-    D3DPRESENT_PARAMETERS  m_D3D9_P;
-    LPD3DXFONT             m_Font;
+    IDirect3D9Ex          *m_pD3D9; // TODO: make getter
+    D3DPRESENT_PARAMETERS  m_D3D9_P; //
+    ID3DXFont             *m_pFont;// TODO: Make getter
 
     HWND m_hwTarget;       // Target window handle
     HWND m_hwOwn;          // Own window handle

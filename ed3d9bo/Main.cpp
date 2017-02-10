@@ -1,6 +1,8 @@
 #include "ed3d9bo.h"
+#include "Draw.h"
 
 ed3d9bo *test;
+Draw *draw;
 void My_Render();
 
 LRESULT CALLBACK Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
@@ -33,7 +35,7 @@ void My_Render() {
     
 
     // Heya
-    test->DrawTextA("Hello #sector5d :)", 0, 0, 255, 0, 0);
+    //test->DrawTextA("Hello #sector5d :)", 0, 0, 255, 0, 0);
 
     
 }

@@ -97,7 +97,7 @@ bool ed3d9bo::DX_Init() {
 
     // Spawn a font.
     D3DXCreateFont(this->m_pDevice, 16, 0, FW_NORMAL, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                   DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &this->m_Font);
+                   DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &this->m_pFont);
 }
 
 void ed3d9bo::Loop(std::function<void(void)> Render) {
@@ -123,13 +123,20 @@ void ed3d9bo::Loop(std::function<void(void)> Render) {
 }
 
 bool ed3d9bo::FixPositioning() {
+    // Get the target window
     this->m_hwTarget = FindWindow(this->m_lpTargetClassName, this->m_lpTargetWindowName);
     if(!this->m_hwTarget) // No longer exists (in theory)
         return false;
 
-    // TODO: add this
+    // Get the RECT of the target
     GetWindowRect(this->m_hwTarget, &this->m_RectTarget);
-    MoveWindow(this->m_hwOwn, this->m_RectTarget.left, this->m_RectTarget.top, this->m_RectTarget.right - this->m_RectTarget.left, this->m_RectTarget.bottom - this->m_RectTarget.top, true);
+    // Move the overlay
+    MoveWindow(this->m_hwOwn, 
+        this->m_RectTarget.left, // X: 0
+        this->m_RectTarget.top,  // Y: 0
+        this->m_RectTarget.right - this->m_RectTarget.left, // Width
+        this->m_RectTarget.bottom - this->m_RectTarget.top, // Height
+        true); // Redraw after moving
 
     return true;
 }
@@ -186,18 +193,6 @@ bool ed3d9bo::Post_Render() {
     this->m_pDevice->PresentEx(0, 0, 0, 0, 0);
 
     return true;
-}
-
-int ed3d9bo:: DrawText(char* String, int x, int y, int r, int g, int b) {
-    RECT Font;
-    Font.bottom = 0;
-    Font.left = x;
-    Font.top = y;
-    Font.right = 0;
-
-    this->m_Font->DrawTextA(0, String, strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
-
-    return 0;
 }
 
 ed3d9bo::~ed3d9bo() {}
