@@ -55,12 +55,12 @@ bool ed3d9bo::Window_Init() {
     SetLayeredWindowAttributes(this->m_hwOwn, 0, 0, LWA_ALPHA);
     SetLayeredWindowAttributes(this->m_hwOwn, 0, RGB(0, 0, 0), LWA_COLORKEY);
 
+    // Extend the window frame into the client area (AERO Fix)
+    DwmExtendFrameIntoClientArea(this->m_hwOwn, &this->m_Margins);
+
     // Display the window & update it with the newly set attributes
     ShowWindow(this->m_hwOwn, SW_SHOW);
     UpdateWindow(this->m_hwOwn);
-
-    // Extend the window frame into the client area
-    DwmExtendFrameIntoClientArea(this->m_hwOwn, &this->m_Margins);
 
     // Success.
     return 0;
@@ -101,7 +101,6 @@ bool ed3d9bo::DX_Init() {
 }
 
 void ed3d9bo::Loop(std::function<void(void)> Render) {
-    
     while(1) {
         if(PeekMessage(&this->Message, this->m_hwOwn, 0, 0, PM_REMOVE)) {
             TranslateMessage(&this->Message);
@@ -156,7 +155,7 @@ bool ed3d9bo::SetOverlayDimensions(int iWidth, int iHeight) {
 
 bool ed3d9bo::Pre_Render() {
     // Clear old stuff
-    m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 1.0f, 0);
+    m_pDevice->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
     m_pDevice->BeginScene();
 
     // Is the target focused (in foreground?). If so, return true as in, continue rendering.
