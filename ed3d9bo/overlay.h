@@ -16,34 +16,28 @@ namespace ed3d9bo {
         Overlay(HINSTANCE, LPCTSTR, LPCTSTR, LPCTSTR, LRESULT(CALLBACK *)(HWND, UINT, WPARAM, LPARAM));
         ~Overlay();
 
-        bool Window_Init(); // Initializes the window
-        bool DX_Init(); // Initializes DX.
-        bool SetOverlayDimensions(int, int); // Sets overlay dimensions
+        bool WindowInit(); // Initializes the window
+        bool DXInit(); // Initializes DX.
         void Loop(std::function<void(void)>); // Loops!
-        int DrawText(char* String, int x, int y, int r, int g, int b);
-
-        IDirect3DDevice9Ex    *m_pDevice; // TODO: move down, make getter
         LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM) = nullptr;
 
-        // TODO: Move these in a thing yeah ok
-        DWORD dwFrames = 0;
-        DWORD dwCurrentTime = 0;
-        DWORD dwLastUpdateTime = 0;
-        DWORD dwElapsedTime = 0;
-        char szFPS[32] = {0x00};
+        IDirect3DDevice9Ex *GetDevice();
+        IDirect3D9Ex       *GetObject();
+        ID3DXFont          *GetFont();
+        DWORD              GetFPS();
 
+        bool SetOverlayDimensions(int, int); // Sets overlay dimension
+        void SetSleepTime(DWORD); // Sets the time between two renders (sleep time)
     protected:
-        // WndProc callback
-        //std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>WndProc = nullptr;
+        IDirect3DDevice9Ex    *m_pDevice;
+        IDirect3D9Ex          *m_pD3D9;
+        D3DPRESENT_PARAMETERS  m_D3D9_P;
+        ID3DXFont             *m_pFont;
 
-        IDirect3D9Ex          *m_pD3D9; // TODO: make getter
-        D3DPRESENT_PARAMETERS  m_D3D9_P; //
-        ID3DXFont             *m_pFont;// TODO: Make getter
-
-        HWND m_hwTarget;       // Target window handle
-        HWND m_hwOwn;          // Own window handle
+        HWND      m_hwTarget;  // Target window handle
+        HWND      m_hwOwn;     // Own window handle
         HINSTANCE m_hInstance; // Application instance
-        MSG Message;           // For events
+        MSG       Message;     // For events
 
         MARGINS m_Margins;            // Window Margins
         RECT    m_RectTarget;         // Target RECT
@@ -52,14 +46,19 @@ namespace ed3d9bo {
         LPCTSTR m_lpTargetWindowName; // Target window name (window title, actually)
         LPCTSTR m_lpszOwnWindowName;  // Own window name (title)
 
-                                      // Preferred overlay width and height
-        int m_iWidth = NULL;
-        int m_iHeight = NULL;
-        // TODO: Add a setter for this
-        int m_dwSleep = 17; // How much to sleep between renders? (1/60)*1000 = 16.6666666667ms for 60FPS.
+        int   m_iWidth = NULL;   // Preferred overlay width
+        int   m_iHeight = NULL;  // And height
+        DWORD m_dwSleep = 17;  // How much to sleep between renders? (1/60)*1000 = 16.6666666667ms for 60FPS.
 
-        bool FixPositioning();
-        bool Pre_Render(); // Stuff to do BEFORE drawing
-        bool Post_Render(); // Stuff to do AFTER drawing
+        // FPS measurement
+        DWORD dwFrameCount  = 0;
+        DWORD dwTimeNow     = 0;
+        DWORD dwLastUpdated = 0;
+        DWORD dwTimePassed  = 0;
+        DWORD dwFPS         = 0;
+
+        bool FixPositioning();  // Fixes positioning
+        bool PreRender();       // Stuff to do BEFORE drawing
+        bool PostRender();      // Stuff to do AFTER drawing
     };
 }

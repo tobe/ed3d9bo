@@ -23,8 +23,8 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR  lpCmdL
     // Here's the class!
     try {
         test = new ed3d9bo::Overlay(hInstance, "Notepad", "Untitled - Notepad", "Testing", Proc);
-        test->Window_Init();
-        test->DX_Init();
+        test->WindowInit();
+        test->DXInit();
         test->Loop(My_Render);
     }catch(const std::exception &e) {
         printf("fk: %s", e.what());
@@ -33,7 +33,7 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR  lpCmdL
 
 void My_Render() {
     
-
+    printf("%lu\n", test->GetFPS());
     // Heya
     //test->DrawTextA("Hello #sector5d :)", 0, 0, 255, 0, 0);
 

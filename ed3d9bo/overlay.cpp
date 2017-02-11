@@ -1,8 +1,9 @@
 #include "overlay.h"
+//#define CALC_FPS
 using namespace ed3d9bo;
 
 Overlay::Overlay(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM)) {
-    // Instantiate these.
+    // Instantiate some variables.
     this->m_hInstance           = hInstance;
     this->m_lpTargetClassName   = lpClassName;
     this->m_lpTargetWindowName  = lpWindowName;
@@ -10,7 +11,7 @@ Overlay::Overlay(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName,
     this->WndProc               = WndProc;
 }
 
-bool Overlay::Window_Init() {
+bool Overlay::WindowInit() {
     // Initialize the window
     WNDCLASSEX wndOverlay;
     ZeroMemory(&wndOverlay, sizeof(wndOverlay));
@@ -67,8 +68,7 @@ bool Overlay::Window_Init() {
     return 0;
 }
 
-// Overload this for ImGui
-bool Overlay::DX_Init() {
+bool Overlay::DXInit() {
     auto hCreateMe = Direct3DCreate9Ex(D3D_SDK_VERSION, &this->m_pD3D9);
     if(!SUCCEEDED(hCreateMe)) { // Uh...
         UnregisterClass(this->m_lpszOwnWindowName, this->m_hInstance);
@@ -96,9 +96,11 @@ bool Overlay::DX_Init() {
             return false;
     }
 
-    // Spawn a font.
+    // Spawn an example font
     D3DXCreateFont(this->m_pDevice, 16, 0, FW_NORMAL, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                    DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &this->m_pFont);
+
+    return 0;
 }
 
 void Overlay::Loop(std::function<void(void)> Render) {
@@ -113,10 +115,10 @@ void Overlay::Loop(std::function<void(void)> Render) {
             exit(0);
 
         // Render time!
-        if(this->Pre_Render()) {
+        if(this->PreRender()) {
             Render();
         }
-        this->Post_Render();
+        this->PostRender();
 
         // Sleep
         Sleep(this->m_dwSleep);
@@ -161,7 +163,7 @@ bool Overlay::SetOverlayDimensions(int iWidth, int iHeight) {
     return true;
 }
 
-bool Overlay::Pre_Render() {
+bool Overlay::PreRender() {
     // Clear old stuff
     m_pDevice->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
     m_pDevice->BeginScene();
@@ -173,27 +175,47 @@ bool Overlay::Pre_Render() {
     return false; // Othewise, there's no point in rendering if the application isn't even focused.
 }
 
-bool Overlay::Post_Render() {
+bool Overlay::PostRender() {
     /*this->m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE); // Turn off Z-buffering
     this->m_pDevice->SetRenderState(D3DRS_LIGHTING, FALSE); // Turn off 3D-lightning
     this->m_pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);*/
 
-    dwFrames++;
-    dwCurrentTime = GetTickCount(); // Even better to use timeGetTime()
-    dwElapsedTime = dwCurrentTime - dwLastUpdateTime;
-
-    if(dwElapsedTime >= 1000) {
-        wsprintf(szFPS, "FPS = %u", (UINT)(dwFrames * 1000.0 / dwElapsedTime));
-        dwFrames = 0;
-        dwLastUpdateTime = dwCurrentTime;
-    }
-
-    this->DrawTextA(szFPS, 30, 100, 0, 255, 0);
-
     this->m_pDevice->EndScene();
     this->m_pDevice->PresentEx(0, 0, 0, 0, 0);
 
+#ifdef CALC_FPS
+    // FPS calculation
+    this->dwFrameCount++; // Increase the frame count
+    this->dwTimeNow    = GetTickCount(); // Get the current time
+    this->dwTimePassed = this->dwTimeNow - this->dwLastUpdated; // Calculate the delta
+    if(this->dwTimePassed >= 1000) { // If a second has passed...
+        this->dwFPS = (this->dwFrameCount * 1000) / this->dwTimePassed;
+        this->dwFrameCount  = 0; // Reset the frame count
+        this->dwLastUpdated = this->dwTimeNow; // And update the time
+    }
+#endif
+
     return true;
+}
+
+IDirect3DDevice9Ex *Overlay::GetDevice() {
+    return this->m_pDevice;
+}
+
+IDirect3D9Ex *Overlay::GetObject() {
+    return this->m_pD3D9;
+}
+
+ID3DXFont *Overlay::GetFont() {
+    return this->m_pFont;
+}
+
+void Overlay::SetSleepTime(DWORD dwSleepTime) {
+    this->m_dwSleep = dwSleepTime;
+}
+
+DWORD Overlay::GetFPS() {
+    return this->dwFPS;
 }
 
 Overlay::~Overlay() {}
