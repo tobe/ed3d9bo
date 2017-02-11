@@ -1,4 +1,5 @@
 #include "Draw.h"
+using namespace ed3d9bo;
 
 Draw::Draw(ID3DXFont *m_pFont, IDirect3DDevice9Ex *m_pDevice) {
     this->m_pFont = m_pFont;

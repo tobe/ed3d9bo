@@ -56,7 +56,7 @@ bool Overlay::WindowInit() {
 
     // Create the window
     // TODO: fix this
-    this->m_hwOwn = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_NOACTIVATE, this->m_lpszOwnWindowName, this->m_lpszOwnWindowName,
+    this->m_hwOwn = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED, this->m_lpszOwnWindowName, this->m_lpszOwnWindowName,
                                    WS_POPUP, 100, 100, this->m_iWidth, this->m_iHeight, 0, 0, this->m_hInstance, 0);
     if(!this->m_hwOwn)
         throw std::runtime_error("Failed to CreateWindowEx.");

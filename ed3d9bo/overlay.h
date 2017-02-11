@@ -59,7 +59,7 @@ namespace ed3d9bo {
         DWORD dwFPS         = 0;
 
         bool FixPositioning();  // Fixes positioning
-        bool PreRender();       // Stuff to do BEFORE drawing
-        bool PostRender();      // Stuff to do AFTER drawing
+        virtual bool PreRender();       // Stuff to do BEFORE drawing
+        virtual bool PostRender();      // Stuff to do AFTER drawing
     };
 }
