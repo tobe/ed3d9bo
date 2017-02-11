@@ -2,13 +2,21 @@
 //#define CALC_FPS
 using namespace ed3d9bo;
 
-Overlay::Overlay(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM)) {
+Overlay *g_Overlay;
+Overlay::Overlay(HINSTANCE hInstance, LPCTSTR lpClassName, LPCTSTR lpWindowName, LPCTSTR lpszOwnWindowName, LRESULT(CALLBACK *MyWndProc)(HWND, UINT, WPARAM, LPARAM)) {
     // Instantiate some variables.
     this->m_hInstance           = hInstance;
     this->m_lpTargetClassName   = lpClassName;
     this->m_lpTargetWindowName  = lpWindowName;
     this->m_lpszOwnWindowName   = lpszOwnWindowName;
-    this->WndProc               = WndProc;
+    this->MyWndProc             = MyWndProc;
+
+    g_Overlay = this;
+}
+
+// This may not be in a class, however we need to access it as if it was... a dirty workaround.
+LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    return g_Overlay->WndProc(hwnd, msg, wParam, lParam);
 }
 
 bool Overlay::WindowInit() {
@@ -16,8 +24,8 @@ bool Overlay::WindowInit() {
     WNDCLASSEX wndOverlay;
     ZeroMemory(&wndOverlay, sizeof(wndOverlay));
     wndOverlay.cbSize           = sizeof(WNDCLASSEX);
-    wndOverlay.style            = CS_HREDRAW | CS_VREDRAW; // Redraw both vertically and horizontally if a a movement or size adjustment changes the width of the client area.
-    wndOverlay.lpfnWndProc      = this->WndProc; // User-specified WndProc
+    wndOverlay.style            = CS_HREDRAW | CS_VREDRAW;
+    wndOverlay.lpfnWndProc      = MainWndProc;
     wndOverlay.cbClsExtra       = 0;
     wndOverlay.cbWndExtra       = 0;
     wndOverlay.hInstance        = this->m_hInstance;
@@ -122,6 +130,33 @@ void Overlay::Loop(std::function<void(void)> Render) {
 
         // Sleep
         Sleep(this->m_dwSleep);
+    }
+}
+
+//LRESULT CALLBACK *Overlay::WndProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK Overlay::WndProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+    // Call custom WndProc if it has been even set
+    if(this->MyWndProc)
+        this->MyWndProc(hWnd, Message, wParam, lParam);
+
+    switch(Message) {
+        case WM_ACTIVATE:
+            return 0;
+        break;
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+        break;
+
+        case WM_PAINT:
+            DwmExtendFrameIntoClientArea(hWnd, &this->m_Margins);
+            return 0;
+        break;
+
+        default:
+            return DefWindowProc(hWnd, Message, wParam, lParam);
+        break;
     }
 }
 

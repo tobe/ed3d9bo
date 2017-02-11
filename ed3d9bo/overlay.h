@@ -19,12 +19,13 @@ namespace ed3d9bo {
         bool WindowInit(); // Initializes the window
         bool DXInit(); // Initializes DX.
         void Loop(std::function<void(void)>); // Loops!
-        LRESULT(CALLBACK *WndProc)(HWND, UINT, WPARAM, LPARAM) = nullptr;
+        LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM); // Own WndProc
+        LRESULT(CALLBACK *MyWndProc)(HWND, UINT, WPARAM, LPARAM) = nullptr; // User-defined WndProc
 
         IDirect3DDevice9Ex *GetDevice();
-        IDirect3D9Ex       *GetObject();
-        ID3DXFont          *GetFont();
-        DWORD              GetFPS();
+        IDirect3D9Ex *GetObject();
+        ID3DXFont *GetFont();
+        DWORD GetFPS();
 
         bool SetOverlayDimensions(int, int); // Sets overlay dimension
         void SetSleepTime(DWORD); // Sets the time between two renders (sleep time)
