@@ -8,7 +8,7 @@ ed3d9bo::Draw *g_pDraw;
 
 INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR  lpCmdLine, int nCmdShow) {
     try {
-        // Initialize the Overlay
+        // Initialize the Overlay -- pass a nullptr if you don't have a custom WndProc.
         g_pOverlay = new ed3d9bo::Overlay(hInstance, "Notepad", "Untitled - Notepad", "Testing", nullptr);
         g_pOverlay->WindowInit();
         g_pOverlay->DXInit();
